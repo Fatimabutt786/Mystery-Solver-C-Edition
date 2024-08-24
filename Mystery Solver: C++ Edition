@@ -1,0 +1,406 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cstdlib>
+#include <ctime>   
+#include <thread>  
+#include <chrono>  
+
+// Function prototypes
+void startGame();
+void displayStory(const std::string& story);
+bool investigateClue(const std::vector<std::string>& clues, int& correctClueIndex);
+bool solveMystery(const std::string& story, int correctClueIndex);
+void showClues(const std::vector<std::string>& clues);
+bool askToContinue();
+
+// Predefined mystery stories
+std::vector<std::string> stories = {
+    "A famous painting has been stolen from the museum.",
+    "Mysterious disappearances in a remote national park.",
+    "Celebrity blackmailed for sensitive information.",
+    "School children exhibit symptoms of an unexplained illness.",
+    "Valuable artifact stolen from a historical museum.",
+    "Bank transactions by an executive raise red flags.",
+    "Assassination attempt on a well-known public figure.",
+    "Corruption scandal in a major sports organization.",
+    "Top-secret government documents were stolen.",
+    "Famous musician's sudden disappearance.",
+    "A high-profile lawyer is found dead under mysterious circumstances.",
+    "A well-known chef has gone missing before a major cooking event.",
+    "A new tech startup has been hacked, leaking sensitive data.",
+    "An underground casino is raided for illegal activities.",
+    "A beloved local actor is being harassed by an unknown stalker.",
+    "A historic shipwreck is found with valuable artifacts missing.",
+    "An academic researcher’s groundbreaking research goes missing.",
+    "A large corporation is accused of unethical practices.",
+    "A famous art collector’s mansion is broken into.",
+    "A political leader receives threats of extortion.",
+    "A scientist’s laboratory is broken into with experiments tampered.",
+    "A luxury car dealership is targeted by a high-profile thief.",
+    "An old bookstore is found with rare books stolen.",
+    "A celebrity wedding is disrupted by an unexpected event.",
+    "A tech mogul’s private party is crashed by an intruder.",
+    "An influential journalist’s office is vandalized.",
+    "A major film production studio is targeted by espionage.",
+    "A prestigious university’s exam papers are leaked.",
+    "A prominent fashion designer’s new collection is stolen.",
+    "An exclusive art gallery faces an unexpected heist.",
+    "A high-end restaurant’s secret recipe goes missing.",
+    "A well-known socialite’s mansion is robbed during a party.",
+    "A top athlete is accused of doping with no evidence.",
+    "A popular travel blogger’s trip ends in mystery.",
+    "A famous music festival experiences an unexplained incident.",
+    "A renowned scientist’s personal diary goes missing.",
+    "A high-profile environmental activist receives threats.",
+    "An influential CEO’s personal files are leaked online.",
+    "A luxury yacht goes missing with valuable passengers.",
+    "A high-stakes poker game ends with a mysterious disappearance.",
+    "An elite charity event faces a major security breach.",
+    "A famous author’s manuscript is stolen before publication.",
+    "A top fashion model faces unexpected issues before a major show.",
+    "A well-known comedian’s show is sabotaged.",
+    "A prestigious awards ceremony has a mysterious incident.",
+    "A prominent historian’s rare artifacts are stolen.",
+    "A major sports event is disrupted by unknown activities.",
+    "A successful tech entrepreneur faces a surprising scandal.",
+    "A renowned chef’s restaurant is targeted by an unknown group.",
+    "A celebrated artist’s studio is broken into.",
+    "A high-profile environmental project is sabotaged.",
+    "A famous musician’s tour is marred by mysterious incidents."
+};
+
+// Predefined clues for each story
+std::vector<std::vector<std::string>> clues = {
+    {"Security footage shows a suspect near the museum.",
+     "Witnesses reported seeing a suspicious individual.",
+     "The painting was last seen in a high-security area.",
+     "Recent inventory checks show discrepancies."},
+
+    {"Park rangers report seeing strange occurrences.",
+     "Recent searches have turned up no clues.",
+     "Visitors report unusual sights and sounds.",
+     "Authorities are investigating strange animal tracks."},
+
+    {"Ransom demands were made through anonymous sources.",
+     "Security footage shows suspicious individuals.",
+     "Recent events reveal possible connections to a criminal organization.",
+     "The celebrity's recent social media activity might be a clue."},
+
+    {"Medical authorities are investigating the cause.",
+     "Recent cases of illness have been linked.",
+     "Parents report seeing unusual patterns in health.",
+     "No common environmental factors were found."},
+
+    {"Security footage shows a suspect in the vicinity.",
+     "The artifact was last seen in a high-security area.",
+     "Recent inventory checks show discrepancies.",
+     "There was a recent maintenance work in the museum."},
+
+    {"Financial audits reveal irregular activities.",
+     "Suspicious transactions are linked to the executive.",
+     "Recent investigations point to financial misconduct.",
+     "The executive had recent unauthorized meetings."},
+
+    {"Security footage captures the attacker's movements.",
+     "Witnesses report seeing suspicious individuals.",
+     "Recent threats were made against the public figure.",
+     "The attacker might be connected to a known extremist group."},
+
+    {"Recent financial records reveal discrepancies.",
+     "Insider information points to corruption.",
+     "Witnesses report unusual activities in the organization.",
+     "There were recent unauthorized changes in the financial system."},
+
+    {"Security breaches indicate insider involvement.",
+     "Recent leaks revealed sensitive information.",
+     "Authorities are investigating possible espionage.",
+     "A suspicious email was found in the system."},
+
+    {"Last known whereabouts are linked to a private event.",
+     "Unusual phone calls were made before disappearance.",
+     "Witnesses report seeing the musician in a different location.",
+     "There were recent threats made against the musician."},
+
+    {"The lawyer’s office was broken into recently.",
+     "A mysterious package was found at the scene.",
+     "Witnesses saw someone leaving the office late at night.",
+     "Security footage shows a suspicious vehicle nearby."},
+
+    {"The chef’s personal assistant reported strange behavior.",
+     "Unusual activity was noted in the chef’s kitchen.",
+     "A suspicious individual was seen near the chef’s home.",
+     "The chef’s recent competitors may have a motive."},
+
+    {"Sensitive data was accessed through a compromised account.",
+     "Recent changes in system security were unauthorized.",
+     "An insider might have leaked information.",
+     "A suspicious email was sent to the tech team."},
+
+    {"The casino’s security cameras were tampered with.",
+     "Witnesses reported seeing masked individuals.",
+     "Unusual transactions were noted in the casino’s records.",
+     "A known criminal was seen in the area recently."},
+
+    {"The actor received threatening letters.",
+     "Witnesses reported seeing a suspicious figure following the actor.",
+     "The actor’s recent social media posts might be a clue.",
+     "Unusual phone calls were made to the actor’s agent."},
+
+    {"The shipwreck had recently been surveyed by experts.",
+     "Several valuable artifacts were missing from the site.",
+     "Witnesses reported seeing unusual activity around the wreck.",
+     "A recent storm might have affected the site."},
+
+    {"The researcher’s lab was found in disarray.",
+     "Recent projects were tampered with.",
+     "The researcher had ongoing disputes with a colleague.",
+     "Unusual activity was noted in the lab’s security system."},
+
+    {"The corporation’s financial records show large unexplained expenses.",
+     "Recent audits revealed discrepancies.",
+     "An employee reported suspicious activities.",
+     "A whistleblower might have insider information."},
+
+    {"Security footage shows an intruder entering the mansion.",
+     "A recent inventory check revealed missing items.",
+     "Witnesses reported seeing a suspicious vehicle.",
+     "The mansion had recent security upgrades."},
+
+    {"The leader received anonymous letters demanding money.",
+     "Unusual transactions were noted in the leader’s accounts.",
+     "Recent security breaches were reported.",
+     "A known criminal group might be involved."},
+
+    {"The scientist’s experiments were tampered with.",
+     "Recent access logs show unauthorized entries.",
+     "A rival scientist might have had a motive.",
+     "Unusual equipment malfunctions were reported."},
+
+    {"A luxury car was stolen during a high-profile event.",
+     "Security footage shows a suspicious individual near the dealership.",
+     "Recent inventory checks reveal missing vehicles.",
+     "Witnesses reported seeing a suspicious van."},
+
+    {"An old bookstore’s rare book section was targeted.",
+     "Recent book sales show missing rare editions.",
+     "Witnesses reported seeing a person acting suspiciously.",
+     "The bookstore’s security system was malfunctioning."},
+
+    {"The wedding event had a disruption involving unknown individuals.",
+     "Recent guests reported seeing suspicious activity.",
+     "The event’s security was breached.",
+     "Unusual behavior was noted from certain guests."},
+
+    {"The tech mogul’s private event was interrupted by an intruder.",
+     "Recent security system logs show unauthorized access.",
+     "Witnesses saw an individual acting suspiciously.",
+     "The mogul had recent threats from an unknown source."},
+
+    {"The journalist’s office was found vandalized and documents were missing.",
+     "Recent emails indicate possible threats.",
+     "Witnesses reported seeing unusual activity around the office.",
+     "A known rival might have a motive."},
+
+    {"The film studio’s security was breached recently.",
+     "Unusual activities were noted in the studio’s records.",
+     "Witnesses saw suspicious individuals in the vicinity.",
+     "Recent leaks of film scripts were reported."},
+
+    {"Exam papers were leaked before the exams.",
+     "Recent security footage shows unauthorized access.",
+     "Witnesses reported seeing someone tampering with the papers.",
+     "A known student group might be involved."},
+
+    {"The designer’s studio was broken into.",
+     "Recent inventory checks revealed missing items.",
+     "Witnesses saw a suspicious individual leaving the scene.",
+     "The designer had recent disputes with competitors."},
+
+    {"The art gallery faced an unexpected heist.",
+     "Recent security system logs show tampering.",
+     "Witnesses reported seeing individuals acting suspiciously.",
+     "The gallery had recent changes in security protocols."},
+
+    {"The restaurant’s secret recipe was stolen.",
+     "Recent inventory checks reveal discrepancies.",
+     "Witnesses saw someone acting suspiciously in the kitchen.",
+     "The restaurant’s security system was compromised."},
+
+    {"The socialite’s mansion was robbed during a party.",
+     "Recent guest lists show possible suspects.",
+     "Security footage shows unknown individuals at the scene.",
+     "The mansion had recent security upgrades."},
+
+    {"The athlete’s recent performance was under scrutiny.",
+     "Unusual patterns in the athlete’s health data were noted.",
+     "Witnesses reported suspicious behavior around the athlete.",
+     "Recent interviews revealed possible motivations."},
+
+    {"The travel blogger’s recent trip ended in a mysterious situation.",
+     "Witnesses reported seeing unusual activity during the trip.",
+     "Recent travel logs show discrepancies.",
+     "The blogger received threats before the trip."},
+
+    {"The music festival faced an unexplained incident.",
+     "Security footage shows unknown individuals at the festival.",
+     "Recent ticket sales reveal irregularities.",
+     "Witnesses reported seeing suspicious activity."},
+
+    {"The scientist’s personal diary went missing.",
+     "Recent access logs show unauthorized entries.",
+     "Witnesses reported suspicious activity near the scientist’s home.",
+     "The scientist had recent conflicts with colleagues."},
+
+    {"The environmental activist received threats.",
+     "Recent events show increasing hostility towards the activist.",
+     "Witnesses reported suspicious behavior around the activist.",
+     "The activist’s recent work might have provoked someone."},
+
+    {"The CEO’s personal files were leaked online.",
+     "Recent security breaches show unauthorized access.",
+     "Witnesses reported seeing suspicious activity around the CEO.",
+     "The CEO had recent disputes with a known rival."},
+
+    {"The yacht went missing with valuable passengers onboard.",
+     "Recent tracking logs show the yacht’s unusual movements.",
+     "Witnesses reported seeing suspicious individuals near the port.",
+     "The yacht’s crew had recent security issues."},
+
+    {"A high-stakes poker game ended with a player’s disappearance.",
+     "Recent security footage shows unusual activities.",
+     "Witnesses reported seeing a person acting suspiciously.",
+     "The poker game had recent conflicts between players."},
+
+    {"The charity event faced a major security breach.",
+     "Recent event logs show unauthorized access.",
+     "Witnesses reported seeing individuals tampering with the security system.",
+     "The charity had recent conflicts with a rival organization."},
+
+    {"The author’s manuscript was stolen before publication.",
+     "Recent access logs show unauthorized entries.",
+     "Witnesses saw a suspicious individual near the author’s office.",
+     "The author had recent disputes with publishers."},
+
+    {"The fashion model faced unexpected issues before a major show.",
+     "Recent backstage activities were disrupted.",
+     "Witnesses reported seeing suspicious individuals.",
+     "The model had recent conflicts with other participants."},
+
+    {"The comedian’s show was sabotaged.",
+     "Recent event logs show unusual activities.",
+     "Witnesses reported seeing someone acting suspiciously.",
+     "The comedian had recent disputes with colleagues."},
+
+    {"The awards ceremony had a mysterious incident.",
+     "Recent security footage shows unknown individuals.",
+     "Witnesses reported seeing unusual activities.",
+     "The ceremony had recent conflicts between participants."},
+
+    {"The historian’s rare artifacts were stolen.",
+     "Recent inventory checks show missing items.",
+     "Witnesses reported suspicious behavior around the historian’s office.",
+     "The historian had recent disputes with collectors."},
+
+    {"The sports event was disrupted by unknown activities.",
+     "Recent security footage shows unusual movements.",
+     "Witnesses reported seeing suspicious individuals.",
+     "The event had recent conflicts with rival teams."},
+
+    {"The tech entrepreneur faced a surprising scandal.",
+     "Recent company records show discrepancies.",
+     "Witnesses reported suspicious activities around the entrepreneur.",
+     "The entrepreneur had recent conflicts with business partners."},
+
+    {"The chef’s restaurant was targeted by an unknown group.",
+     "Recent inventory checks show missing items.",
+     "Witnesses reported seeing suspicious individuals around the restaurant.",
+     "The restaurant had recent security issues."},
+
+    {"The artist’s studio was broken into.",
+     "Recent access logs show unauthorized entries.",
+     "Witnesses reported seeing a suspicious individual leaving the studio.",
+     "The artist had recent conflicts with competitors."},
+
+    {"The environmental project was sabotaged.",
+     "Recent project logs show tampering.",
+     "Witnesses reported unusual activities around the project site.",
+     "The project had recent disputes with local groups."},
+
+    {"The musician’s tour was marred by mysterious incidents.",
+     "Recent tour logs show unusual occurrences.",
+     "Witnesses reported seeing suspicious individuals at the tour stops.",
+     "The musician had recent conflicts with other bands."}
+};
+
+// Function to start the game
+void startGame() {
+    std::srand(static_cast<unsigned>(std::time(0))); // Seed for random number generation
+
+    do {
+        int storyIndex = std::rand() % stories.size();
+        int correctClueIndex = std::rand() % 4; // Randomly select the correct clue index
+
+        displayStory(stories[storyIndex]);
+        if (investigateClue(clues[storyIndex], correctClueIndex)) {
+            if (solveMystery(stories[storyIndex], correctClueIndex)) {
+                std::cout << "Mystery solved! Well done!" << std::endl;
+            } else {
+                std::cout << "Mystery not solved. Better luck next time." << std::endl;
+            }
+        } else {
+            std::cout << "No valid clue was chosen. Exiting the game." << std::endl;
+            break;
+        }
+    } while (askToContinue());
+
+    std::cout << "Thank you for playing!" << std::endl;
+}
+
+// Function to display a story
+void displayStory(const std::string& story) {
+    std::cout << "Mystery Story: " << story << std::endl;
+}
+
+// Function to investigate clues
+bool investigateClue(const std::vector<std::string>& clues, int& correctClueIndex) {
+    std::cout << "Investigate the clues and choose the correct one:" << std::endl;
+    showClues(clues);
+
+    int clueIndex;
+    std::cout << "Enter the number of the clue you choose (0-3): ";
+    std::cin >> clueIndex;
+
+    if (clueIndex < 0 || clueIndex >= clues.size()) {
+        std::cout << "Invalid clue number." << std::endl;
+        return false;
+    }
+
+    return clueIndex == correctClueIndex;
+}
+
+// Function to solve the mystery
+bool solveMystery(const std::string& story, int correctClueIndex) {
+    std::cout << "You have chosen the clue. Try to solve the mystery!" << std::endl;
+    return true; // Placeholder for actual solving logic
+}
+
+// Function to show clues
+void showClues(const std::vector<std::string>& clues) {
+    for (int i = 0; i < clues.size(); ++i) {
+        std::cout << i << ": " << clues[i] << std::endl;
+    }
+}
+
+// Function to ask if the user wants to continue
+bool askToContinue() {
+    char response;
+    std::cout << "Do you want to solve another mystery? (y/n): ";
+    std::cin >> response;
+    return response == 'y' || response == 'Y';
+}
+
+int main() {
+    startGame();
+    return 0;
+}
